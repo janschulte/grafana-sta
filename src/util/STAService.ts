@@ -2,13 +2,17 @@ import { MutableDataFrame } from '@grafana/data';
 import { BackendSrvRequest, getBackendSrv } from '@grafana/runtime';
 import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { observedPropertyFrame, sensorFrame } from 'types';
 
 import { StaEntity, StaGrafanaParser, StaValueListResponse } from '../sta/common';
-import { StaDatastream } from '../sta/datastream';
-import { ObservationParser } from '../sta/observations';
+import { Datastream, StaDatastream } from '../sta/datastream';
+import { ObservationParser } from '../sta/observation';
+import { ObservedProperty, StaObservedProperty } from '../sta/observedProperty';
+import { Sensor, SensorParser } from '../sta/sensor';
+import { Thing } from '../sta/thing';
 import { DatastreamParser } from './../sta/datastream';
-import { parseIntoObservedPropertyFrame, parseIntoSensorFrame } from './ResponseTransform';
+import { ObservedPropertyParser } from './../sta/observedProperty';
+import { StaSensor } from './../sta/sensor';
+import { StaThing, ThingParser } from './../sta/thing';
 
 export class STAService {
   private url: string;
@@ -17,35 +21,16 @@ export class STAService {
     this.url = url;
   }
 
-  public getDatastreams(): Observable<MutableDataFrame> {
-    const parser = new DatastreamParser();
+  public getDatastreams(): Observable<MutableDataFrame<Datastream>> {
     return this.fetch<StaValueListResponse<StaDatastream>>({ url: this.url + 'Datastreams' }).pipe(
-      map(res => parser.parseList(res).getFrame())
+      map(res => new DatastreamParser().parseList(res).getFrame())
     );
   }
 
-  public getDatastream(datastreamId: string): Observable<MutableDataFrame> {
-    const url = this.url + "Datastreams(" + datastreamId + ")"
-    const parser = new DatastreamParser();
-    return this.fetch<StaDatastream>({ url }).pipe(
-      map(res => parser.parseEntity(res).getFrame())
+  public getDatastream(datastreamId: string): Observable<MutableDataFrame<Datastream>> {
+    return this.fetch<StaDatastream>({ url: `${this.url}Datastreams(${datastreamId})` }).pipe(
+      map(res => new DatastreamParser().parseEntity(res).getFrame())
     )
-  }
-
-  async getSensorByDatastreamId(datastreamId: string): Promise<MutableDataFrame> {
-    return this.getPaginated(
-      this.url + "Datastreams('" + datastreamId + "')/Sensor",
-      sensorFrame(),
-      parseIntoSensorFrame
-    );
-  }
-
-  async getObservedPropertyByDatastreamId(datastreamId: string): Promise<MutableDataFrame> {
-    return this.getPaginated(
-      this.url + "Datastreams(" + datastreamId + ")/ObservedProperty",
-      observedPropertyFrame(),
-      parseIntoObservedPropertyFrame
-    );
   }
 
   public getObservationsByDatastreamId(
@@ -66,6 +51,24 @@ export class STAService {
     return this.page(url, parser);
   }
 
+  public getSensorByDatastreamId(datastreamId: string): Observable<MutableDataFrame<Sensor>> {
+    return this.fetch<StaSensor>({ url: `${this.url}Datastreams(${datastreamId})/Sensor` }).pipe(
+      map(res => new SensorParser().parseEntity(res).getFrame())
+    );
+  }
+
+  public getObservedPropertyByDatastreamId(datastreamId: string): Observable<MutableDataFrame<ObservedProperty>> {
+    return this.fetch<StaObservedProperty>({ url: `${this.url}Datastreams(${datastreamId})/ObservedProperty` }).pipe(
+      map(res => new ObservedPropertyParser().parseEntity(res).getFrame())
+    );
+  }
+
+  public getThings(): Observable<MutableDataFrame<Thing>> {
+    return this.fetch<StaValueListResponse<StaThing>>({ url: this.url + 'Things' }).pipe(
+      map(res => new ThingParser().parseList(res).getFrame())
+    );
+  }
+
   private createTimefilter(from: string | undefined, to: string | undefined) {
     const filters = [];
     if (from) {
@@ -75,31 +78,6 @@ export class STAService {
       filters.push(`phenomenonTime le ${to}`);
     }
     return filters.length ? filters.join(' and ') : null
-  }
-
-  async getPaginated(url: string, frame: MutableDataFrame, responseParser: Function): Promise<MutableDataFrame> {
-    return this.doGET({
-      url: url,
-    }).then(response => {
-      // Parse values from this page into frame
-      responseParser(frame, response);
-      // Check if there are additional pages
-      if ('@iot.nextLink' in response) {
-        // Request next page recursively
-        return this.getPaginated(response['@iot.nextLink'], frame, responseParser);
-      } else {
-        return frame;
-      }
-    });
-  }
-
-  // TODO: replace with fetch Method
-  async doGET(options: any) {
-    options!.method = 'GET';
-    if (!('url' in options)) {
-      options.url = this.url;
-    }
-    return await getBackendSrv().request(options);
   }
 
   public page<T extends StaEntity, U extends MutableDataFrame>(

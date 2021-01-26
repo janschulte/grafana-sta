@@ -2,7 +2,7 @@ import { FieldType, MutableDataFrame } from '@grafana/data';
 
 import { StaEntity, StaGrafanaParser } from './common';
 
-interface GrafanaObservation {
+export interface Observation {
     id: string;
     value?: number;
     time?: number;
@@ -13,9 +13,7 @@ export interface StaObservation extends StaEntity {
     phenomenonTime: string;
 }
 
-export interface ObservationFrame extends MutableDataFrame { }
-
-export class ObservationParser extends StaGrafanaParser<StaObservation, ObservationFrame> {
+export class ObservationParser extends StaGrafanaParser<StaObservation, MutableDataFrame<Observation>> {
 
     constructor(unit: string) {
         super(new MutableDataFrame({
@@ -28,7 +26,7 @@ export class ObservationParser extends StaGrafanaParser<StaObservation, Observat
     }
 
     protected parseElemAndAdd(elem: StaObservation): void {
-        const obs: GrafanaObservation = { id: elem['@iot.id'] };
+        const obs: Observation = { id: elem['@iot.id'] };
 
         const time = Date.parse(elem.phenomenonTime);
         if (time) { obs.time = time; }

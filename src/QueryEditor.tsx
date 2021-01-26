@@ -20,15 +20,21 @@ const queryFunctionsSelectable = [
   { label: 'getObservationsByDatastreamId', value: RequestFunctions.getObservationsByDatastreamId },
   { label: 'getSensorByDatastreamId', value: RequestFunctions.getSensorByDatastreamId },
   { label: 'getObservationsByCustom', value: RequestFunctions.getObservationsByCustom },
+  { label: 'Things', value: RequestFunctions.Things },
 ];
 
 export class QueryEditor extends PureComponent<Props, State> {
-  defaultRequestFunction: RequestFunctions = RequestFunctions.getDatastreams;
+  defaultRequestFunction: RequestFunctions = RequestFunctions.Things;
+  defaultId = '';
+
   constructor(props: Props) {
     super(props);
     props.query.requestFunction = this.defaultRequestFunction;
     this.state = { method: this.defaultRequestFunction };
     this.props.query.requestArgs = [];
+    if (this.defaultId) {
+      this.props.query.requestArgs.push(this.defaultId);
+    }
   }
 
   setRequestFunction = (event: SelectableValue) => {
@@ -68,6 +74,7 @@ export class QueryEditor extends PureComponent<Props, State> {
                 onChange={(v: any) => {
                   this.onFirstArgChange(v);
                 }}
+                defaultValue={this.defaultId}
                 label="Id"
                 type="string"
               />

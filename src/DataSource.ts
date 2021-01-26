@@ -3,13 +3,16 @@ import {
   DataQueryResponse,
   DataSourceApi,
   DataSourceInstanceSettings,
+  MetricFindValue,
   MutableDataFrame,
 } from '@grafana/data';
 import { getBackendSrv, getTemplateSrv } from '@grafana/runtime';
-import { map } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { STAService } from 'util/STAService';
 
-import { DataSourceOptions, emptyFrame, RequestFunctions, StaQuery } from './types';
+import { DataSourceOptions, RequestFunctions, StaQuery } from './types';
+import { MyVariableQuery, VariableQueryType } from './VariableQueryEditor';
 
 export class DataSource extends DataSourceApi<StaQuery, DataSourceOptions> {
 
@@ -27,7 +30,7 @@ export class DataSource extends DataSourceApi<StaQuery, DataSourceOptions> {
     const from = options.range.from.toISOString();
     const to = options.range.to.toISOString();
 
-    const promises: Promise<MutableDataFrame<any>>[] = options.targets.map(query => {
+    const observables: Observable<MutableDataFrame<any>>[] = options.targets.map(query => {
       let arg1 = '';
       if (query.requestArgs?.length > 0) {
         arg1 = getTemplateSrv().replace(query.requestArgs[0]);
@@ -35,38 +38,38 @@ export class DataSource extends DataSourceApi<StaQuery, DataSourceOptions> {
       // Start multiplexing here
       switch (query.requestFunction!) {
         case RequestFunctions.getDatastreams: {
-          return this.staService.getDatastreams().toPromise();
+          return this.staService.getDatastreams();
         }
 
         case RequestFunctions.getDatastream: {
-          return this.staService.getDatastream(arg1).toPromise();
+          return this.staService.getDatastream(arg1);
         }
 
         case RequestFunctions.getObservationsByDatastreamId: {
-          return this.staService.getDatastream(arg1).toPromise().then(result => {
-            return this.staService.getObservationsByDatastreamId(arg1, result.get(0)['unit'], from, to).toPromise();
-          });
+          return this.staService.getDatastream(arg1).pipe(
+            switchMap(res => this.staService.getObservationsByDatastreamId(arg1, res.get(0).unit || '', from, to))
+          )
         }
 
         case RequestFunctions.getSensorByDatastreamId: {
-          console.log('getSensorByDatastreamId');
           return this.staService.getSensorByDatastreamId(arg1);
         }
+
         case RequestFunctions.getObservedPropertyByDatastreamId: {
-          console.log('getObservedPropertyByDatastreamId');
           return this.staService.getObservedPropertyByDatastreamId(arg1);
         }
+
+        case RequestFunctions.Things: {
+          return this.staService.getThings();
+        }
+
         default: {
-          console.log('Default empty');
-          console.log(query.requestFunction);
-          return new Promise<MutableDataFrame>(resolve => {
-            resolve(emptyFrame);
-          });
+          return of(new MutableDataFrame({ fields: [] }))
         }
       }
     });
 
-    return Promise.all(promises).then(data => ({ data }));
+    return forkJoin(observables).toPromise().then(data => ({ data }));
   }
 
   /**

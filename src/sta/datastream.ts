@@ -2,14 +2,16 @@ import { FieldType, MutableDataFrame } from '@grafana/data';
 
 import { StaEntity, StaGrafanaParser } from './common';
 
-interface GrafanaDatastream {
+export interface Datastream {
     id: string;
+    name?: string;
     minPhenomenonTime?: number;
     maxPhenomenonTime?: number;
     unit?: string;
 }
 
 export interface StaDatastream extends StaEntity {
+    name?: string;
     unitOfMeasurement?: {
         name: string;
         symbol: string;
@@ -18,16 +20,14 @@ export interface StaDatastream extends StaEntity {
     phenomenonTime?: string;
 }
 
-export interface DatastreamFrame extends MutableDataFrame<GrafanaDatastream> { }
-
-export class DatastreamParser extends StaGrafanaParser<StaDatastream, DatastreamFrame> {
+export class DatastreamParser extends StaGrafanaParser<StaDatastream, MutableDataFrame<Datastream>> {
 
     constructor() {
         super(
             new MutableDataFrame({
                 fields: [
                     { name: 'id', type: FieldType.string },
-                    // { name: 'phenomenonTime', type: FieldType.string },
+                    { name: 'name', type: FieldType.string },
                     // { name: 'geometry', type: FieldType.other },
                     { name: 'minPhenomenonTime', type: FieldType.time },
                     { name: 'maxPhenomenonTime', type: FieldType.time },
@@ -38,15 +38,16 @@ export class DatastreamParser extends StaGrafanaParser<StaDatastream, Datastream
     }
 
     protected parseElemAndAdd(elem: StaDatastream): void {
-        const ds: GrafanaDatastream = {
-            id: elem['@iot.id']
+        const datastream: Datastream = {
+            id: elem['@iot.id'],
         }
-        ds.unit = elem.unitOfMeasurement?.symbol;
+        datastream.name = elem.name;
+        datastream.unit = elem.unitOfMeasurement?.symbol;
         if (elem.phenomenonTime !== undefined) {
             const split = elem.phenomenonTime.split('/');
-            ds.minPhenomenonTime = Date.parse(split[0]);
-            ds.maxPhenomenonTime = Date.parse(split[1]);
+            datastream.minPhenomenonTime = Date.parse(split[0]);
+            datastream.maxPhenomenonTime = Date.parse(split[1]);
         }
-        this.frame.add(ds);
+        this.frame.add(datastream);
     }
 }
