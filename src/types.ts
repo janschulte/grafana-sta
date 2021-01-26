@@ -1,13 +1,12 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
 export enum RequestFunctions {
-  'getDatastreams',
-  'getDatastream',
-  'getObservedPropertyByDatastreamId',
-  'getObservationsByDatastreamId',
-  'getSensorByDatastreamId',
-  'getObservationsByCustom',
-  'Things'
+  Datastreams = 'Datastreams',
+  Datastream = 'Datastream',
+  ObservedPropertyByDatastreamId = 'ObservedPropertyByDatastreamId',
+  ObservationsByDatastreamId = 'ObservationsByDatastreamId',
+  SensorByDatastreamId = 'SensorByDatastreamId',
+  Things = 'Things',
 }
 
 export interface StaQuery extends DataQuery {

@@ -37,25 +37,25 @@ export class DataSource extends DataSourceApi<StaQuery, DataSourceOptions> {
       }
       // Start multiplexing here
       switch (query.requestFunction!) {
-        case RequestFunctions.getDatastreams: {
+        case RequestFunctions.Datastreams: {
           return this.staService.getDatastreams();
         }
 
-        case RequestFunctions.getDatastream: {
+        case RequestFunctions.Datastream: {
           return this.staService.getDatastream(arg1);
         }
 
-        case RequestFunctions.getObservationsByDatastreamId: {
+        case RequestFunctions.ObservationsByDatastreamId: {
           return this.staService.getDatastream(arg1).pipe(
             switchMap(res => this.staService.getObservationsByDatastreamId(arg1, res.get(0).unit || '', from, to))
           )
         }
 
-        case RequestFunctions.getSensorByDatastreamId: {
+        case RequestFunctions.SensorByDatastreamId: {
           return this.staService.getSensorByDatastreamId(arg1);
         }
 
-        case RequestFunctions.getObservedPropertyByDatastreamId: {
+        case RequestFunctions.ObservedPropertyByDatastreamId: {
           return this.staService.getObservedPropertyByDatastreamId(arg1);
         }
 

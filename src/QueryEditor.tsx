@@ -3,6 +3,7 @@ import { LegacyForms, Select } from '@grafana/ui';
 import React, { PureComponent } from 'react';
 
 import { DataSource } from './DataSource';
+import { enumKeys } from './helper';
 import { DataSourceOptions, RequestFunctions, StaQuery } from './types';
 
 const { FormField } = LegacyForms;
@@ -13,15 +14,7 @@ type State = {
   method: RequestFunctions;
 };
 
-const queryFunctionsSelectable = [
-  { label: 'getDatastreams', value: RequestFunctions.getDatastreams },
-  { label: 'getDatastream', value: RequestFunctions.getDatastream },
-  { label: 'getObservedPropertyByDatastreamId', value: RequestFunctions.getObservedPropertyByDatastreamId },
-  { label: 'getObservationsByDatastreamId', value: RequestFunctions.getObservationsByDatastreamId },
-  { label: 'getSensorByDatastreamId', value: RequestFunctions.getSensorByDatastreamId },
-  { label: 'getObservationsByCustom', value: RequestFunctions.getObservationsByCustom },
-  { label: 'Things', value: RequestFunctions.Things },
-];
+const queryFunctionsSelectable = enumKeys(RequestFunctions).map(e => ({ label: e, value: e }));
 
 export class QueryEditor extends PureComponent<Props, State> {
   defaultRequestFunction: RequestFunctions = RequestFunctions.Things;
@@ -50,8 +43,28 @@ export class QueryEditor extends PureComponent<Props, State> {
     query.requestArgs[0] = event.target.value;
   };
 
-  setDefault(): any {
+  setDefault() {
     return queryFunctionsSelectable.find(e => e.value === this.defaultRequestFunction);
+  }
+
+  getDatastreamIdInput() {
+    switch (this.state.method) {
+      case RequestFunctions.Datastreams:
+      case RequestFunctions.Things:
+        return null;
+      default:
+        return (
+          <FormField
+            width={15}
+            onChange={(v: any) => {
+              this.onFirstArgChange(v);
+            }}
+            defaultValue={this.defaultId}
+            label="datastreamId"
+            type="string"
+          />
+        );
+    }
   }
 
   render() {
@@ -66,29 +79,7 @@ export class QueryEditor extends PureComponent<Props, State> {
               this.setRequestFunction(v);
             }}
           />
-          <></>
-          {this.state.method !== RequestFunctions.getObservationsByCustom &&
-            this.state.method !== RequestFunctions.getDatastreams && (
-              <FormField
-                width={15}
-                onChange={(v: any) => {
-                  this.onFirstArgChange(v);
-                }}
-                defaultValue={this.defaultId}
-                label="Id"
-                type="string"
-              />
-            )}
-          {this.state.method === RequestFunctions.getObservationsByCustom && (
-            <FormField
-              width={15}
-              onChange={(v: any) => {
-                this.onFirstArgChange(v);
-              }}
-              label="Custom Query"
-              type="string"
-            />
-          )}
+          {this.getDatastreamIdInput()}
         </div>
       </div>
     );
