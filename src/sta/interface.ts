@@ -3,18 +3,18 @@ import { BackendSrvRequest, getBackendSrv } from '@grafana/runtime';
 import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
-import { StaEntity, StaGrafanaParser, StaValueListResponse } from '../sta/common';
-import { Datastream, StaDatastream } from '../sta/datastream';
-import { ObservationParser } from '../sta/observation';
-import { ObservedProperty, StaObservedProperty } from '../sta/observedProperty';
-import { Sensor, SensorParser } from '../sta/sensor';
-import { Thing } from '../sta/thing';
-import { DatastreamParser } from './../sta/datastream';
-import { ObservedPropertyParser } from './../sta/observedProperty';
-import { StaSensor } from './../sta/sensor';
-import { StaThing, ThingParser } from './../sta/thing';
+import { StaEntity, StaGrafanaParser, StaValueListResponse } from './common';
+import { Datastream, StaDatastream } from './datastream';
+import { ObservationParser } from './observation';
+import { ObservedProperty, StaObservedProperty } from './observedProperty';
+import { Sensor, SensorParser } from './sensor';
+import { Thing } from './thing';
+import { DatastreamParser } from './datastream';
+import { ObservedPropertyParser } from './observedProperty';
+import { StaSensor } from './sensor';
+import { StaThing, ThingParser } from './thing';
 
-export class STAService {
+export class StaInterface {
   private url: string;
 
   constructor(url: string) {

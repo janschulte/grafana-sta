@@ -9,20 +9,20 @@ import {
 import { getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { STAService } from 'util/STAService';
+import { StaInterface } from 'sta/interface';
 
 import { DataSourceOptions, RequestFunctions, StaQuery } from './types';
 import { MyVariableQuery, VariableQueryType } from './VariableQueryEditor';
 
 export class DataSource extends DataSourceApi<StaQuery, DataSourceOptions> {
 
-  staService: STAService;
+  sta: StaInterface;
   url: string;
 
   constructor(instanceSettings: DataSourceInstanceSettings<DataSourceOptions>) {
     super(instanceSettings);
     this.url = instanceSettings.url === undefined ? '' : instanceSettings.url;
-    this.staService = new STAService(this.url);
+    this.sta = new StaInterface(this.url);
   }
 
   async query(options: DataQueryRequest<StaQuery>): Promise<DataQueryResponse> {
@@ -38,29 +38,29 @@ export class DataSource extends DataSourceApi<StaQuery, DataSourceOptions> {
       // Start multiplexing here
       switch (query.requestFunction!) {
         case RequestFunctions.Datastreams: {
-          return this.staService.getDatastreams();
+          return this.sta.getDatastreams();
         }
 
         case RequestFunctions.Datastream: {
-          return this.staService.getDatastream(arg1);
+          return this.sta.getDatastream(arg1);
         }
 
         case RequestFunctions.ObservationsByDatastreamId: {
-          return this.staService.getDatastream(arg1).pipe(
-            switchMap(res => this.staService.getObservationsByDatastreamId(arg1, res.get(0).unit || '', from, to))
+          return this.sta.getDatastream(arg1).pipe(
+            switchMap(res => this.sta.getObservationsByDatastreamId(arg1, res.get(0).unit || '', from, to))
           )
         }
 
         case RequestFunctions.SensorByDatastreamId: {
-          return this.staService.getSensorByDatastreamId(arg1);
+          return this.sta.getSensorByDatastreamId(arg1);
         }
 
         case RequestFunctions.ObservedPropertyByDatastreamId: {
-          return this.staService.getObservedPropertyByDatastreamId(arg1);
+          return this.sta.getObservedPropertyByDatastreamId(arg1);
         }
 
         case RequestFunctions.Things: {
-          return this.staService.getThings();
+          return this.sta.getThings();
         }
 
         default: {
@@ -105,7 +105,7 @@ export class DataSource extends DataSourceApi<StaQuery, DataSourceOptions> {
     console.log(`Selected type: ${query.queryType}`);
 
     if (query.queryType === VariableQueryType.Datastream) {
-      const datastreams = await this.staService.getDatastreams().toPromise();
+      const datastreams = await this.sta.getDatastreams().toPromise();
       return datastreams.map(e => ({ text: e.id }));
     }
     return [];
