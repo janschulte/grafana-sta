@@ -74,15 +74,18 @@ export class DataSource extends DataSourceApi<StaQuery, DataSourceOptions> {
    * @returns {Promise<any>}
    */
   async testDatasource(): Promise<any> {
-    return getBackendSrv().fetch({ url: this.url }).pipe(
+    return getBackendSrv().fetch<any>({ url: this.url }).pipe(
       map(res => {
-        if (res.status === 200 && res.data && res.data.value && res.data.value.length) {
-          const dsValue = res.data.value.find(e => e.name === 'Datastreams');
-          if (dsValue) {
-            return {
-              status: 'success',
-              message: 'Successfully checked connection to STA',
-              title: 'Success',
+        if (res.status === 200 && res.data && res.data.value && res.data.value) {
+          const value = res.data.value;
+          if (value instanceof Array) {
+            const dsValue = value.find(e => e.name === 'Datastreams');
+            if (dsValue) {
+              return {
+                status: 'success',
+                message: 'Successfully checked connection to STA',
+                title: 'Success',
+              }
             }
           }
         }
