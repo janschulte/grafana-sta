@@ -100,4 +100,14 @@ export class DataSource extends DataSourceApi<StaQuery, DataSourceOptions> {
       })
     ).toPromise();
   }
+
+  async metricFindQuery(query: MyVariableQuery, options?: any): Promise<MetricFindValue[]> {
+    console.log(`Selected type: ${query.queryType}`);
+
+    if (query.queryType === VariableQueryType.Datastream) {
+      const datastreams = await this.staService.getDatastreams().toPromise();
+      return datastreams.map(e => ({ text: e.id }));
+    }
+    return [];
+  }
 }
