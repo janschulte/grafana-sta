@@ -1,10 +1,10 @@
-import React, { PureComponent } from 'react';
-import { Select } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
+import { LegacyForms, Select } from '@grafana/ui';
+import React, { PureComponent } from 'react';
+
 import { DataSource } from './DataSource';
 import { DataSourceOptions, RequestFunctions, StaQuery } from './types';
 
-import { LegacyForms } from '@grafana/ui';
 const { FormField } = LegacyForms;
 
 type Props = QueryEditorProps<DataSource, StaQuery, DataSourceOptions>;
@@ -23,12 +23,11 @@ const queryFunctionsSelectable = [
 ];
 
 export class QueryEditor extends PureComponent<Props, State> {
+  defaultRequestFunction: RequestFunctions = RequestFunctions.getDatastreams;
   constructor(props: Props) {
     super(props);
-    props.query.requestFunction = RequestFunctions.getDatastreams;
-    this.state = {
-      method: RequestFunctions.getDatastreams,
-    };
+    props.query.requestFunction = this.defaultRequestFunction;
+    this.state = { method: this.defaultRequestFunction };
     this.props.query.requestArgs = [];
   }
 
@@ -45,42 +44,46 @@ export class QueryEditor extends PureComponent<Props, State> {
     query.requestArgs[0] = event.target.value;
   };
 
+  setDefault(): any {
+    return queryFunctionsSelectable.find(e => e.value === this.defaultRequestFunction);
+  }
+
   render() {
     return (
-        <div className="gf-form-inline">
-          <div className="gf-form">
-            <Select
-              prefix="Query Function"
-              options={queryFunctionsSelectable}
-              defaultValue={queryFunctionsSelectable[0]}
-              onChange={v => {
-                this.setRequestFunction(v);
-              }}
-            />
-            <></>
-            {this.state.method !== RequestFunctions.getObservationsByCustom &&
-              this.state.method !== RequestFunctions.getDatastreams && (
-                <FormField
-                  width={15}
-                  onChange={(v: any) => {
-                    this.onFirstArgChange(v);
-                  }}
-                  label="Id"
-                  type="string"
-                />
-              )}
-            {this.state.method === RequestFunctions.getObservationsByCustom && (
+      <div className="gf-form-inline">
+        <div className="gf-form">
+          <Select
+            prefix="Query Function"
+            options={queryFunctionsSelectable}
+            defaultValue={this.setDefault()}
+            onChange={v => {
+              this.setRequestFunction(v);
+            }}
+          />
+          <></>
+          {this.state.method !== RequestFunctions.getObservationsByCustom &&
+            this.state.method !== RequestFunctions.getDatastreams && (
               <FormField
                 width={15}
                 onChange={(v: any) => {
                   this.onFirstArgChange(v);
                 }}
-                label="Custom Query"
+                label="Id"
                 type="string"
               />
             )}
-          </div>
+          {this.state.method === RequestFunctions.getObservationsByCustom && (
+            <FormField
+              width={15}
+              onChange={(v: any) => {
+                this.onFirstArgChange(v);
+              }}
+              label="Custom Query"
+              type="string"
+            />
+          )}
         </div>
+      </div>
     );
   }
 }
