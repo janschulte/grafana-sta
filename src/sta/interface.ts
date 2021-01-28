@@ -4,15 +4,11 @@ import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 import { StaEntity, StaGrafanaParser, StaValueListResponse } from './common';
-import { Datastream, StaDatastream, DatastreamParser } from './datastream';
+import { Datastream, DatastreamParser, StaDatastream } from './datastream';
 import { ObservationParser } from './observation';
-import { ObservedProperty, StaObservedProperty } from './observedProperty';
-import { Sensor, SensorParser } from './sensor';
+import { ObservedProperty, ObservedPropertyParser, StaObservedProperty } from './observedProperty';
+import { Sensor, SensorParser, StaSensor } from './sensor';
 import { Thing, ThingParser } from './thing';
-import { DatastreamParser } from './datastream';
-import { ObservedPropertyParser } from './observedProperty';
-import { StaSensor } from './sensor';
-import { StaThing, ThingParser } from './thing';
 
 export class StaInterface {
   private url: string;
