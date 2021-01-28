@@ -14,4 +14,4 @@ export interface StaQuery extends DataQuery {
   requestArgs: string[];
 }
 
-export interface DataSourceOptions extends DataSourceJsonData { }
+export interface DataSourceOptions extends DataSourceJsonData {}
