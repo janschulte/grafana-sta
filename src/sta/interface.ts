@@ -4,11 +4,11 @@ import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 import { StaEntity, StaGrafanaParser, StaValueListResponse } from './common';
-import { Datastream, StaDatastream } from './datastream';
+import { Datastream, StaDatastream, DatastreamParser } from './datastream';
 import { ObservationParser } from './observation';
 import { ObservedProperty, StaObservedProperty } from './observedProperty';
 import { Sensor, SensorParser } from './sensor';
-import { Thing } from './thing';
+import { Thing, ThingParser } from './thing';
 import { DatastreamParser } from './datastream';
 import { ObservedPropertyParser } from './observedProperty';
 import { StaSensor } from './sensor';
@@ -22,9 +22,7 @@ export class StaInterface {
   }
 
   public getDatastreams(): Observable<MutableDataFrame<Datastream>> {
-    return this.fetch<StaValueListResponse<StaDatastream>>({ url: this.url + 'Datastreams' }).pipe(
-      map(res => new DatastreamParser().parseList(res).getFrame())
-    );
+    return this.page(this.url + 'Datastreams', new DatastreamParser())
   }
 
   public getDatastream(datastreamId: string): Observable<MutableDataFrame<Datastream>> {
@@ -64,9 +62,7 @@ export class StaInterface {
   }
 
   public getThings(): Observable<MutableDataFrame<Thing>> {
-    return this.fetch<StaValueListResponse<StaThing>>({ url: this.url + 'Things' }).pipe(
-      map(res => new ThingParser().parseList(res).getFrame())
-    );
+    return this.page(this.url + 'Things', new ThingParser());
   }
 
   private createTimefilter(from: string | undefined, to: string | undefined) {
